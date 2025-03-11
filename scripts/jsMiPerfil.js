@@ -6,7 +6,7 @@ $(document).ready(function () {
     obtenerPublicaciones();
 });
 
-//aqui se cargan las publis
+//aqui se cargan las publicaiones mias
 function obtenerPublicaciones() {
     $.ajax({
         url: dominioUrl + `/api/Publicaciones/all/${matriculaGlobal}`, 
@@ -15,13 +15,12 @@ function obtenerPublicaciones() {
         crossDomain: true,
     })
     .done(function(result){
+        $('#publicacionReciente').empty();
         result.forEach(function(element){
             if (element.idUsuario == matriculaGlobal) {
                 $("#publicacionReciente").append(mostrarPublicacionMia(element));
-              } else {
-                $("#publicacionReciente").append(mostrarPublicacionesAjenas(element));
-              }
-        })
+            }
+        });
     })
     .fail(function(xhr, status, error) {
         Swal.fire({
@@ -29,7 +28,7 @@ function obtenerPublicaciones() {
           title: 'Error al traer publicaciones',
           text: `Ocurrió un error al intentar cargar las publicaciones: ${error}`,
         });
-      });
+    });
 }
 
 //aqui se crean las publis
@@ -71,6 +70,7 @@ $("#botonPublicar").on("click", function() {
         });
     }
 });
+
 // aqui cuando haces click en editar se modifican las publis
 function editarPublicacion(idPublicacion, contenido) {
     $.ajax({
@@ -110,6 +110,19 @@ $(document).on("click", ".botonEditar", function() {
     if (nuevoContenido !== null && nuevoContenido.trim() !== "") {
         editarPublicacion(idPublicacion, nuevoContenido);
         contenidoElemento.text(nuevoContenido);
+    }
+});
+
+$("#botonPublicar").on("click", function() {
+    const contenido = $("#contenidoMio").val();
+    if (contenido.trim() !== "") {
+        crearPublicacion(contenido);
+    } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Publicación vacía',
+          text: 'Por favor, escribe algo antes de publicar.',
+        });
     }
 });
 
@@ -173,11 +186,9 @@ function darLikePublicacion(idPublicacion) {
             title: 'Like registrado',
             text: 'Has dado like a la publicación.',
         });
-        $(`#like-${idPublicacion}`).data("like", true); // Actualiza el estado de data-like
-        console.log(`Like registrado para la publicación ${idPublicacion}. Estado actual de data-like: true`);
+        $(`#like-${idPublicacion}`).data("like", true);
     })
     .fail(function(xhr, status, error) {
-        console.error(`Error: ${error}, Status: ${status}, Response: ${xhr.responseText}`); // Log para más detalles del error
         Swal.fire({
           icon: 'error',
           title: 'Error al dar like',
@@ -208,11 +219,9 @@ function quitarLikePublicacion(idPublicacion) {
             title: 'Dislike registrado',
             text: 'Has quitado like a la publicación.',
         });
-        $(`#like-${idPublicacion}`).data("like", false); // Actualiza el estado de data-like
-        console.log(`Dislike registrado para la publicación ${idPublicacion}. Estado actual de data-like: false`);
+        $(`#like-${idPublicacion}`).data("like", false);
     })
     .fail(function(xhr, status, error) {
-        console.error(`Error: ${error}, Status: ${status}, Response: ${xhr.responseText}`); // Log para más detalles del error
         Swal.fire({
           icon: 'error',
           title: 'Error al quitar like',
@@ -224,9 +233,7 @@ function quitarLikePublicacion(idPublicacion) {
 $(document).on("click", ".botonLike", function() {
     const idPublicacion = $(this).attr("id").split("-")[1];
     const likePropio = $(this).data("like");
-    console.log(`Estado de like propio antes de la acción: ${likePropio}`); // Registro de depuración
-
-    if (likePropio === false) {
+    if (likePropio == false) {
         darLikePublicacion(idPublicacion);
     } else {
         quitarLikePublicacion(idPublicacion);
@@ -273,43 +280,3 @@ function mostrarPublicacionMia(publicacion){
     `;
     return contenedorMio;
 }
-
-function mostrarPublicacionesAjenas(publicacion) {
-    var contenedorAjeno = `
-        <div class="post mb-4 p-5 border">
-            <div class="d-flex align-items-center mb-2">
-                <div class="ms-3">
-                    <strong>${publicacion.nombre}</strong> <strong>${publicacion.idUsuario}</strong> <strong>${publicacion.idPublicacion}</strong>
-                    <p class="text-muted" style="font-size: 0.9rem;">${moment(publicacion.fechaCreacion).fromNow()}</p>
-                </div>
-            </div>
-            <div class="post-content mb-3">
-                <p>${publicacion.contenido}</p>
-            </div>
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <button class="btn btn-outline-primary me-2 botonLike" data-like="${publicacion.LikePropio}" id="like-${publicacion.idPublicacion}" type="button">
-                        <i class="bi bi-hand-thumbs-up"></i> Like (<span class="like-count" data-id="${publicacion.idPublicacion}">${publicacion.cantidadLikes}</span>)
-                    </button>
-                    <a href="publicaciones.html">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="bi bi-chat-left-text"></i> Comentar (${publicacion.cantidadComentarios})
-                        </button>
-                    </a>
-                </div>
-            </div>
-        </div>
-    `;
-    return contenedorAjeno;
-};
-
-$(document).on("click", ".botonComentar", function() {
-    const idPublicacion = $(this).attr("id").split("-")[1];
-    window.location.href = `publicaciones.html?id=${idPublicacion}`;
-});
-     
-
-
-
-
-
